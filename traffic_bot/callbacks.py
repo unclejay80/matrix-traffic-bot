@@ -62,6 +62,7 @@ class Callbacks:
 
         # Process as message if in a public room without command prefix
         has_command_prefix = msg.startswith(self.command_prefix)
+        is_slave_command = msg.startswith(self.config.slave_command_prefix)
 
         # room.is_group is often a DM, but not always.
         # room.is_group does not allow room aliases
@@ -78,6 +79,19 @@ class Callbacks:
         if has_command_prefix:
             # Remove the command prefix
             msg = msg[len(self.command_prefix) :]
+
+        slave_bot_id = ""
+
+        # Filter out slave id specific commands for other slave bots
+        if is_slave_command and msg[0].isdigit():
+            slave_bot_id = msg[0]
+            if not slave_bot_id == str(self.config.botId):
+                return
+            msg = msg[1 :]
+        
+
+        msg = msg.strip()
+        
 
         command = Command(self.client, self.store, self.config, msg, room, event)
         await command.process()

@@ -112,7 +112,7 @@ class Config:
         self.homeserver_url = self._get_cfg(["matrix", "homeserver_url"], required=True)
 
         self.master_command_prefix = self._get_cfg(["master_command_prefix"], default="!m") + " "
-        self.slave_command_prefix = self._get_cfg(["slave_command_prefix"], default="!s") + " "
+        self.slave_command_prefix = self._get_cfg(["slave_command_prefix"], default="!s")
 
         self.master_user_id = self._get_cfg(["matrix", "master_user_id"], required=True)
         self.master_password = self._get_cfg(["matrix", "master_password"], required=True)
