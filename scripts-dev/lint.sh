@@ -11,7 +11,7 @@ if [ $# -ge 1 ]
 then
     files=$*
   else
-    files="traffic_bot my-project-name tests"
+    files="traffic_bot traffic-bot tests"
 fi
 
 echo "Linting these locations: $files"
