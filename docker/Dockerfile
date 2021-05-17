@@ -98,4 +98,4 @@ RUN apk add --no-cache \
 VOLUME ["/data"]
 
 # Start the bot
-ENTRYPOINT ["my-project-name", "/data/config.yaml"]
+ENTRYPOINT ["traffic-bot", "/data/config.yaml"]
