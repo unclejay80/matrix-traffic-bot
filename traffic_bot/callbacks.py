@@ -11,11 +11,11 @@ from nio import (
     UnknownEvent,
 )
 
-from my_project_name.bot_commands import Command
-from my_project_name.chat_functions import make_pill, react_to_event, send_text_to_room
-from my_project_name.config import Config
-from my_project_name.message_responses import Message
-from my_project_name.storage import Storage
+from traffic_bot.bot_commands import Command
+from traffic_bot.chat_functions import make_pill, react_to_event, send_text_to_room
+from traffic_bot.config import Config
+from traffic_bot.message_responses import Message
+from traffic_bot.storage import Storage
 
 logger = logging.getLogger(__name__)
 

@@ -11,29 +11,27 @@ from nio import (
     InviteMemberEvent,
     LocalProtocolError,
     LoginError,
-    RegisterResponse,
     MegolmEvent,
     RoomMessageText,
     UnknownEvent,
 )
 
-from my_project_name.config import Config
-from my_project_name.storage import Storage
+from traffic_bot.config import Config
+from traffic_bot.storage import Storage
 
 logger = logging.getLogger(__name__)
 
 
-class RegisterClient:
+class LoginClient:
     def __init__(
         self,
         store: Storage,
         config: Config,
-        user_id: str,
         username: str,
         password: str
     ):
 
-        from my_project_name.callbacks import Callbacks
+        from traffic_bot.callbacks import Callbacks
 
         self.config = config
         self.store = store
@@ -48,7 +46,6 @@ class RegisterClient:
 
         self.user_id = username
         self.user_password = password
-        self.user_id_without_host = user_id
 
 
         # Initialize the matrix client
@@ -76,16 +73,14 @@ class RegisterClient:
             try:
                 # Try to login with the configured username/password
                 try:
-                    register_response = await self.client.register(
-                        self.user_id_without_host,
-                        self.user_password,
-                        self.config.device_name
+                    login_response = await self.client.login(
+                        password=self.user_password,
+                        device_name=self.config.device_name,
                     )
 
-
                     # Check if login failed
-                    if type(register_response) != RegisterResponse:
-                        logger.error("Failed to register: %s", register_response.message)
+                    if type(login_response) == LoginError:
+                        logger.error("Failed to login: %s", login_response.message)
                         return False
                 except LocalProtocolError as e:
                     # There's an edge case here where the user hasn't installed the correct C

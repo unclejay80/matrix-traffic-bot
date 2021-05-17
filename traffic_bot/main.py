@@ -17,10 +17,10 @@ from nio import (
     UnknownEvent,
 )
 
-from my_project_name.callbacks import Callbacks
-from my_project_name.config import Config
-from my_project_name.storage import Storage
-from my_project_name.matrix_client import MatrixClient
+from traffic_bot.callbacks import Callbacks
+from traffic_bot.config import Config
+from traffic_bot.storage import Storage
+from traffic_bot.matrix_client import MatrixClient
 
 logger = logging.getLogger(__name__)
 

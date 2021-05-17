@@ -7,9 +7,9 @@ import string
 
 from nio import AsyncClient, MatrixRoom, RoomMessageText
 
-from my_project_name.chat_functions import react_to_event, send_text_to_room, room_invite, room_kick, register, login
-from my_project_name.config import Config
-from my_project_name.storage import Storage
+from traffic_bot.chat_functions import react_to_event, send_text_to_room, room_invite, room_kick, register, login
+from traffic_bot.config import Config
+from traffic_bot.storage import Storage
 
 
 

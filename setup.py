@@ -20,7 +20,7 @@ def read_file(path_segments):
         return f.read()
 
 
-version = exec_file(("my_project_name", "__init__.py"))["__version__"]
+version = exec_file(("traffic_bot", "__init__.py"))["__version__"]
 long_description = read_file(("README.md",))
 
 

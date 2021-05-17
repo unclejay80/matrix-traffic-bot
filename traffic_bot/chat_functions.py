@@ -23,10 +23,10 @@ from nio import (
     LoginResponse,
 )
 
-from my_project_name.config import Config
-from my_project_name.storage import Storage
-from my_project_name.login_client import LoginClient
-from my_project_name.register_client import RegisterClient
+from traffic_bot.config import Config
+from traffic_bot.storage import Storage
+from traffic_bot.login_client import LoginClient
+from traffic_bot.register_client import RegisterClient
 
 logger = logging.getLogger(__name__)
 
