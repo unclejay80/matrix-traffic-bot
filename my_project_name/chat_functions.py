@@ -1,16 +1,32 @@
 import logging
+import threading
+import time
+import copy
 from typing import Optional, Union
 
 from markdown import markdown
 from nio import (
     AsyncClient,
+    AsyncClientConfig,
     ErrorResponse,
     MatrixRoom,
     MegolmEvent,
     Response,
     RoomSendResponse,
     SendRetryError,
+    RoomInviteResponse,
+    RoomInviteError,
+    RoomKickResponse,
+    RoomKickError,
+    RegisterResponse,
+    LoginError,
+    LoginResponse,
 )
+
+from my_project_name.config import Config
+from my_project_name.storage import Storage
+from my_project_name.login_client import LoginClient
+from my_project_name.register_client import RegisterClient
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +144,57 @@ async def react_to_event(
         ignore_unverified_devices=True,
     )
 
+
+
+async def register(
+    config: Config, 
+    user_id: str,
+    username: str, 
+    password: str 
+):
+
+    newConfig = Config(config.filepath, user_id)
+    store = Storage(newConfig.database)
+    client = RegisterClient(store, newConfig, user_id, username, password)
+
+    return await client.start()
+
+async def login(
+    config: Config, 
+    user_id: str,
+    username: str, 
+    password: str, 
+) -> Union[LoginError,LoginResponse]:
+
+    newConfig = Config(config.filepath, user_id)
+    store = Storage(newConfig.database)
+    client = LoginClient(store, newConfig, username, password)
+
+    return await client.start()
+
+
+async def room_invite(
+    client: AsyncClient,
+    room_id: str,
+    user_id: str,
+) -> Union[RoomInviteResponse, RoomInviteError]:
+
+    return await client.room_invite(
+        room_id,
+        user_id,
+    )
+
+
+async def room_kick(
+    client: AsyncClient,
+    room_id: str,
+    user_id: str,
+) -> Union[RoomKickResponse, RoomKickError]:
+
+    return await client.room_kick(
+        room_id,
+        user_id,
+    )
 
 async def decryption_failure(self, room: MatrixRoom, event: MegolmEvent) -> None:
     """Callback for when an event fails to decrypt. Inform the user"""

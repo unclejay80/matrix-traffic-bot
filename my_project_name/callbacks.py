@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class Callbacks:
-    def __init__(self, client: AsyncClient, store: Storage, config: Config):
+    def __init__(self, client: AsyncClient, store: Storage, config: Config, master: bool):
         """
         Args:
             client: nio client used to interact with matrix.
@@ -33,7 +33,12 @@ class Callbacks:
         self.client = client
         self.store = store
         self.config = config
-        self.command_prefix = config.command_prefix
+        self.master = master
+
+        if master:
+            self.command_prefix = config.master_command_prefix
+        else:
+            self.command_prefix = config.slave_command_prefix
 
     async def message(self, room: MatrixRoom, event: RoomMessageText) -> None:
         """Callback for when a message event is received
@@ -190,7 +195,7 @@ class Callbacks:
 
             reacted_to = relation_dict.get("event_id")
             if reacted_to and relation_dict.get("rel_type") == "m.annotation":
-                await self._reaction(room, event, reacted_to)
+                #await self._reaction(room, event, reacted_to)
                 return
 
         logger.debug(

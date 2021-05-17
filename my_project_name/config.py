@@ -17,8 +17,9 @@ logging.getLogger("peewee").setLevel(
 class Config:
     """Creates a Config object from a YAML-encoded config file from a given filepath"""
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, botId):
         self.filepath = filepath
+        self.botId = botId
         if not os.path.isfile(filepath):
             raise ConfigError(f"Config file '{filepath}' does not exist")
 
@@ -72,6 +73,8 @@ class Config:
 
         # Database setup
         database_path = self._get_cfg(["storage", "database"], required=True)
+        if self.botId != "":
+            database_path = database_path.replace(".db", "_" + str(self.botId) + ".db")
 
         # Support both SQLite and Postgres backends
         # Determine which one the user intends
@@ -88,14 +91,19 @@ class Config:
             raise ConfigError("Invalid connection string for storage.database")
 
         # Matrix bot account setup
-        self.user_id = self._get_cfg(["matrix", "user_id"], required=True)
-        if not re.match("@.*:.*", self.user_id):
+        self.slave_base_user_id = self._get_cfg(["matrix", "slave_base_user_id"], required=True)
+        self.slave_user_id = self.slave_base_user_id
+        if self.botId != "":
+            self.slave_user_id = self.slave_user_id + str(self.botId)
+        
+        self.homeserver_host = self._get_cfg(["matrix", "homeserver_host"], required=True)
+
+        self.slave_user_id = self.slave_user_id +  ":" + self.homeserver_host
+        
+        if not re.match("@.*:.*", self.slave_user_id):
             raise ConfigError("matrix.user_id must be in the form @name:domain")
 
-        self.user_password = self._get_cfg(["matrix", "user_password"], required=False)
-        self.user_token = self._get_cfg(["matrix", "user_token"], required=False)
-        if not self.user_token and not self.user_password:
-            raise ConfigError("Must supply either user token or password")
+        self.slave_password = self._get_cfg(["matrix", "slave_password"], required=False)
 
         self.device_id = self._get_cfg(["matrix", "device_id"], required=True)
         self.device_name = self._get_cfg(
@@ -103,7 +111,16 @@ class Config:
         )
         self.homeserver_url = self._get_cfg(["matrix", "homeserver_url"], required=True)
 
-        self.command_prefix = self._get_cfg(["command_prefix"], default="!c") + " "
+        self.master_command_prefix = self._get_cfg(["master_command_prefix"], default="!m") + " "
+        self.slave_command_prefix = self._get_cfg(["slave_command_prefix"], default="!s") + " "
+
+        self.master_user_id = self._get_cfg(["matrix", "master_user_id"], required=True)
+        self.master_password = self._get_cfg(["matrix", "master_password"], required=True)
+
+
+        self.slave_index_start = self._get_cfg(["matrix", "slave_index_start"], required=True)
+        self.slave_index_end = self._get_cfg(["matrix", "slave_index_end"], required=True)
+
 
     def _get_cfg(
         self,

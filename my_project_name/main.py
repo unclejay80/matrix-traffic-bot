@@ -4,6 +4,7 @@ import logging
 import sys
 from time import sleep
 
+
 from aiohttp import ClientConnectionError, ServerDisconnectedError
 from nio import (
     AsyncClient,
@@ -19,6 +20,7 @@ from nio import (
 from my_project_name.callbacks import Callbacks
 from my_project_name.config import Config
 from my_project_name.storage import Storage
+from my_project_name.matrix_client import MatrixClient
 
 logger = logging.getLogger(__name__)
 
@@ -33,86 +35,39 @@ async def main():
     else:
         config_path = "config.yaml"
 
-    # Read the parsed config file and create a Config object
-    config = Config(config_path)
 
-    # Configure the database
+    clientList = []
+
+
+    # create admin
+
+    config = Config(config_path, "")
+
     store = Storage(config.database)
+    client = MatrixClient(store, config, True)
+    clientList.append(client)
 
-    # Configuration options for the AsyncClient
-    client_config = AsyncClientConfig(
-        max_limit_exceeded=0,
-        max_timeouts=0,
-        store_sync_tokens=True,
-        encryption_enabled=True,
-    )
 
-    # Initialize the matrix client
-    client = AsyncClient(
-        config.homeserver_url,
-        config.user_id,
-        device_id=config.device_id,
-        store_path=config.store_path,
-        config=client_config,
-    )
+    start = int(config.slave_index_start)
+    end = int(config.slave_index_end)
 
-    if config.user_token:
-        client.access_token = config.user_token
-        client.user_id = config.user_id
+    # create slaves
+    for x in range(start, end):
+        # Read the parsed config file and create a Config object
+        config = Config(config_path, str(x))
 
-    # Set up event callbacks
-    callbacks = Callbacks(client, store, config)
-    client.add_event_callback(callbacks.message, (RoomMessageText,))
-    client.add_event_callback(callbacks.invite, (InviteMemberEvent,))
-    client.add_event_callback(callbacks.decryption_failure, (MegolmEvent,))
-    client.add_event_callback(callbacks.unknown, (UnknownEvent,))
+        store = Storage(config.database)
+        client = MatrixClient(store, config, False)
+        clientList.append(client)
 
-    # Keep trying to reconnect on failure (with some time in-between)
-    while True:
-        try:
-            if config.user_token:
-                # Use token to log in
-                client.load_store()
+        logger.info(f"main loop " + str(x))
 
-                # Sync encryption keys with the server
-                if client.should_upload_keys:
-                    await client.keys_upload()
-            else:
-                # Try to login with the configured username/password
-                try:
-                    login_response = await client.login(
-                        password=config.user_password,
-                        device_name=config.device_name,
-                    )
+    logger.info(f"main 2")
 
-                    # Check if login failed
-                    if type(login_response) == LoginError:
-                        logger.error("Failed to login: %s", login_response.message)
-                        return False
-                except LocalProtocolError as e:
-                    # There's an edge case here where the user hasn't installed the correct C
-                    # dependencies. In that case, a LocalProtocolError is raised on login.
-                    logger.fatal(
-                        "Failed to login. Have you installed the correct dependencies? "
-                        "https://github.com/poljar/matrix-nio#installation "
-                        "Error: %s",
-                        e,
-                    )
-                    return False
+    await asyncio.gather(
+        *[it.start() for it in clientList])
+    
 
-                # Login succeeded!
-
-            logger.info(f"Logged in as {config.user_id}")
-            await client.sync_forever(timeout=30000, full_state=True)
-
-        except (ClientConnectionError, ServerDisconnectedError):
-            logger.warning("Unable to connect to homeserver, retrying in 15s...")
-
-            # Sleep so we don't bombard the server with login requests
-            sleep(15)
-        finally:
-            # Make sure to close the client connection on disconnect
-            await client.close()
 
 
 # Run the main function in an asyncio event loop
