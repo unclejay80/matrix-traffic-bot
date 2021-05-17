@@ -55,6 +55,7 @@ class LoginClient:
             device_id=self.config.device_id + self.user_id,
             store_path=self.config.store_path,
             config=self.client_config,
+            ssl=False
         )
 
 
