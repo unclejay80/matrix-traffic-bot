@@ -93,7 +93,7 @@ class Callbacks:
         msg = msg.strip()
         
 
-        command = Command(self.client, self.store, self.config, msg, room, event)
+        command = Command(self.client, self.store, self.config, msg, room, event, not is_slave_command)
         await command.process()
 
     async def invite(self, room: MatrixRoom, event: InviteMemberEvent) -> None:

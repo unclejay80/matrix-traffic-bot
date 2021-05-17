@@ -23,7 +23,8 @@ class Command:
         config: Config,
         command: str,
         room: MatrixRoom,
-        event: RoomMessageText
+        event: RoomMessageText,
+        master_only: bool
     ):
         """A command made by a user.
 
@@ -47,6 +48,7 @@ class Command:
         self.room = room
         self.event = event
         self.args = self.command.split()[1:]
+        self.master_only = master_only
 
 
     async def makeTraffic(self, client, roomId):
@@ -63,11 +65,11 @@ class Command:
             await self._react()
         elif self.command.startswith("help"):
             await self._show_help()
-        elif self.command.startswith("kick_invite"):
+        elif self.command.startswith("kick_invite") and self.master_only:
             await self._kick_invite()
-        elif self.command.startswith("invite"):
+        elif self.command.startswith("invite") and self.master_only:
             await self._invite()
-        elif self.command.startswith("add_zombie"):
+        elif self.command.startswith("add_zombie") and self.master_only:
             await self._add_zombie()
         else:
             await self._unknown_command()
@@ -164,10 +166,22 @@ class Command:
             return
 
         topic = self.args[0]
-        if topic == "rules":
-            text = "These are the rules!"
-        elif topic == "commands":
-            text = "Available commands:"
+        if topic == "commands":
+            if self.master_only:
+                text = (
+                    "Available commands:"
+                    "<br>`kick_invite <id>` Kick and invite slave with &lt;id&gt; (master must be admin in current room)"
+                    "<br>`add_zombie <count>` register new user and add &lt;zombie count&gt; to current room"
+                    "<br>`invite <count>` invite &lt;slaves&gt; to current room"
+                    "<br>`echo <count>` send &lt;count&gt; messages to current room"
+                    "<br>`react` react to command with ⭐"
+                )
+            else:
+                text = (
+                    "Available commands:"
+                    "<br>`echo <count>` send &lt;count&gt; messages to current room"
+                    "<br>`react` react to command with ⭐"
+                )
         else:
             text = "Unknown help topic!"
         await send_text_to_room(self.client, self.room.room_id, text)
