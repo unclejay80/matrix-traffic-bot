@@ -11,17 +11,17 @@ from nio import (
     UnknownEvent,
 )
 
-from my_project_name.bot_commands import Command
-from my_project_name.chat_functions import make_pill, react_to_event, send_text_to_room
-from my_project_name.config import Config
-from my_project_name.message_responses import Message
-from my_project_name.storage import Storage
+from traffic_bot.bot_commands import Command
+from traffic_bot.chat_functions import make_pill, react_to_event, send_text_to_room
+from traffic_bot.config import Config
+from traffic_bot.message_responses import Message
+from traffic_bot.storage import Storage
 
 logger = logging.getLogger(__name__)
 
 
 class Callbacks:
-    def __init__(self, client: AsyncClient, store: Storage, config: Config):
+    def __init__(self, client: AsyncClient, store: Storage, config: Config, master: bool):
         """
         Args:
             client: nio client used to interact with matrix.
@@ -33,7 +33,12 @@ class Callbacks:
         self.client = client
         self.store = store
         self.config = config
-        self.command_prefix = config.command_prefix
+        self.master = master
+
+        if master:
+            self.command_prefix = config.master_command_prefix
+        else:
+            self.command_prefix = config.slave_command_prefix
 
     async def message(self, room: MatrixRoom, event: RoomMessageText) -> None:
         """Callback for when a message event is received
@@ -57,6 +62,7 @@ class Callbacks:
 
         # Process as message if in a public room without command prefix
         has_command_prefix = msg.startswith(self.command_prefix)
+        is_slave_command = msg.startswith(self.config.slave_command_prefix)
 
         # room.is_group is often a DM, but not always.
         # room.is_group does not allow room aliases
@@ -74,7 +80,20 @@ class Callbacks:
             # Remove the command prefix
             msg = msg[len(self.command_prefix) :]
 
-        command = Command(self.client, self.store, self.config, msg, room, event)
+        slave_bot_id = ""
+
+        # Filter out slave id specific commands for other slave bots
+        if is_slave_command and msg[0].isdigit():
+            slave_bot_id = msg[0]
+            if not slave_bot_id == str(self.config.botId):
+                return
+            msg = msg[1 :]
+        
+
+        msg = msg.strip()
+        
+
+        command = Command(self.client, self.store, self.config, msg, room, event, not is_slave_command)
         await command.process()
 
     async def invite(self, room: MatrixRoom, event: InviteMemberEvent) -> None:
@@ -190,7 +209,7 @@ class Callbacks:
 
             reacted_to = relation_dict.get("event_id")
             if reacted_to and relation_dict.get("rel_type") == "m.annotation":
-                await self._reaction(room, event, reacted_to)
+                #await self._reaction(room, event, reacted_to)
                 return
 
         logger.debug(

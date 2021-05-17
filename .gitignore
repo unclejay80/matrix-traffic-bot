@@ -24,3 +24,5 @@ config.yaml
 
 # Log files
 *.log
+.vscode/settings.json
+.vscode/launch.json

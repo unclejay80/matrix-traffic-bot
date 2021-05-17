@@ -3,23 +3,48 @@
 # Default values are shown
 
 # The string to prefix messages with to talk to the bot in group chats
-command_prefix: "!c"
+
+# This one is for addressing the single master bot
+command_prefix_master: "!m"
+
+# This is for the slave bots
+command_prefix_slave: "!s"
 
 # Options for connecting to the bot's Matrix account
 matrix:
-  # The Matrix User ID of the bot account
-  user_id: "@bot:example.com"
+
+  # The Master Matrix User ID of the bot account (without hostname)
+  master_user_id: "@admin_bot"
+
+  # The Master account password
+  master_password: "password"
+
+
+  # Slave user base name - must be pre-registered (without hostname)
+  slave_base_user_id: "@test_"
+
+  # Homeserver Hostname
+  homeserver_host: "example.com"
+
   # Matrix account password (optional if access token used)
-  user_password: ""
-  # Matrix account access token (optional if password used)
-  #user_token: ""
+  slave_password: "password"
+
+  # Slave User Index start
+  slave_index_start: 0
+
+  # Slave User Index end (<)
+  slave_index_end: 10
+
+  ## this will generate slave user ids @test_1, @test_2, ...
+
+
   # The URL of the homeserver to connect to
   homeserver_url: https://example.com
   # The device ID that is **non pre-existing** device
   # If this device ID already exists, messages will be dropped silently in encrypted rooms
   device_id: ABCDEFGHIJ
   # What to name the logged in device
-  device_name: my-project-name
+  device_name: traffic-bot
 
 storage:
   # The database connection string
