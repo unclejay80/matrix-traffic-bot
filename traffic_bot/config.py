@@ -115,6 +115,9 @@ class Config:
         self.slave_command_prefix = self._get_cfg(["slave_command_prefix"], default="!s")
 
         self.master_user_id = self._get_cfg(["matrix", "master_user_id"], required=True)
+
+        self.master_user_id = self.master_user_id +  ":" + self.homeserver_host
+
         self.master_password = self._get_cfg(["matrix", "master_password"], required=True)
 
 
