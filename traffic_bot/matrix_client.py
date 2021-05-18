@@ -3,6 +3,7 @@ import asyncio
 import logging
 import sys
 from time import sleep
+from random import randrange
 
 from aiohttp import ClientConnectionError, ServerDisconnectedError
 from nio import (
@@ -70,6 +71,7 @@ class MatrixClient:
 
     async def start(self):
         logger.info(f"Start {self.user_id}")
+        asyncio.sleep(randrange(10))
         # Keep trying to reconnect on failure (with some time in-between)
         while True:
             try:
@@ -101,10 +103,10 @@ class MatrixClient:
                 await self.client.sync_forever(timeout=30000, full_state=True)
 
             except (ClientConnectionError, ServerDisconnectedError) as e:
-                logger.exception("Unable to connect to homeserver, retrying in 15s...")
+                logger.warning("Unable to connect to homeserver, retrying in 15s...")
 
                 # Sleep so we don't bombard the server with login requests
-                sleep(15)
+                sleep(1)
             finally:
                 # Make sure to close the client connection on disconnect
                 await self.client.close()
