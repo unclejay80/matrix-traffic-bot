@@ -72,44 +72,39 @@ class RegisterClient:
 
     async def start(self):
         logger.info(f"Start {self.user_id}")
-        # Keep trying to reconnect on failure (with some time in-between)
-        if True:
-            try:
-                # Try to login with the configured username/password
-                try:
-                    register_response = await self.client.register(
-                        self.user_id_without_host,
-                        self.user_password,
-                        self.config.device_name
-                    )
+        
 
+        try:
+            register_response = await self.client.register(
+                self.user_id_without_host,
+                self.user_password,
+                self.config.device_name
+            )
 
-                    # Check if login failed
-                    if type(register_response) != RegisterResponse:
-                        logger.error("Failed to register: %s", register_response.message)
-                        return False
-                except LocalProtocolError as e:
-                    # There's an edge case here where the user hasn't installed the correct C
-                    # dependencies. In that case, a LocalProtocolError is raised on login.
-                    logger.fatal(
-                        "Failed to login. Have you installed the correct dependencies? "
-                        "https://github.com/poljar/matrix-nio#installation "
-                        "Error: %s",
-                        e,
-                    )
-                    return False
+            if type(register_response) != RegisterResponse:
+                logger.error("Failed to register: %s", register_response.message)
+                return False
 
-                # Login succeeded!
+        except LocalProtocolError as e:
+            # There's an edge case here where the user hasn't installed the correct C
+            # dependencies. In that case, a LocalProtocolError is raised on login.
+            logger.fatal(
+                "Failed to login. Have you installed the correct dependencies? "
+                "https://github.com/poljar/matrix-nio#installation "
+                "Error: %s",
+                e,
+            )
+            return False
 
-                logger.info(f"Logged in as {self.user_id}")
-                await self.client.sync(timeout=30000, full_state=True)
+        try:
+            # Try to login with the configured username/password
+            logger.info(f"Logged in as {self.user_id}")
+            await self.client.sync(timeout=30000, full_state=True)
+            await self.client.keys_upload()
 
-            except (ClientConnectionError, ServerDisconnectedError):
-                logger.warning("Unable to connect to homeserver, retrying in 15s...")
-
-                # Sleep so we don't bombard the server with login requests
-                sleep(15)
-            finally:
-                # Make sure to close the client connection on disconnect
-                logger.info(f"Close connection {self.user_id}")
-                await self.client.close()
+        except (ClientConnectionError, ServerDisconnectedError):
+            logger.warning("Unable to connect to homeserver...")        
+            
+        finally:
+            logger.info(f"Close connection {self.user_id}")
+            await self.client.close()
