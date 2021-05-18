@@ -101,8 +101,7 @@ class MatrixClient:
                 await self.client.sync_forever(timeout=30000, full_state=True)
 
             except (ClientConnectionError, ServerDisconnectedError) as e:
-                logger.warning("Unable to connect to homeserver, retrying in 15s...")
-                #logger.warning("%s", e.message)
+                logger.exception("Unable to connect to homeserver, retrying in 15s...")
 
                 # Sleep so we don't bombard the server with login requests
                 sleep(15)
