@@ -102,7 +102,7 @@ class MatrixClient:
 
             except (ClientConnectionError, ServerDisconnectedError) as e:
                 logger.warning("Unable to connect to homeserver, retrying in 15s...")
-                logger.warning("%s", e.message)
+                #logger.warning("%s", e.message)
 
                 # Sleep so we don't bombard the server with login requests
                 sleep(15)
